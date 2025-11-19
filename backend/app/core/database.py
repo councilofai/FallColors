@@ -1,6 +1,6 @@
 """Database models and session management."""
 
-from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, JSON, Text
+from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, JSON, Text, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -37,6 +37,7 @@ class TestSession(Base):
     # Selectors for chatbot interface
     input_selector = Column(String, nullable=True)
     submit_selector = Column(String, nullable=True)
+    headless = Column(Boolean, default=False)  # Whether to run browser in headless mode
 
     # Results
     conversation = Column(JSON, default=list)  # List of message exchanges
