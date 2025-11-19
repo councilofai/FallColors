@@ -2,6 +2,12 @@
 
 import sys
 import os
+import asyncio
+
+# Fix for Windows: Set event loop policy BEFORE any asyncio usage
+# This is critical for Playwright to work on Windows
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 # Add app directory to path
 sys.path.insert(0, os.path.dirname(__file__))
