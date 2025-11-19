@@ -25,10 +25,20 @@ if __name__ == "__main__":
     print(f"Browser Mode: {'Headless' if settings.browser_headless else 'Headed'}")
     print("=" * 60)
 
-    uvicorn.run(
-        "app.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug,
-        log_level="info"
-    )
+    # On Windows, use direct app object to ensure event loop policy is preserved
+    # On other platforms, use string-based import for better reload support
+    if sys.platform == 'win32':
+        uvicorn.run(
+            app,
+            host=settings.host,
+            port=settings.port,
+            log_level="info"
+        )
+    else:
+        uvicorn.run(
+            "app.main:app",
+            host=settings.host,
+            port=settings.port,
+            reload=settings.debug,
+            log_level="info"
+        )

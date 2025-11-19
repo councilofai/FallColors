@@ -1,9 +1,19 @@
 """Interactive browser session service for manual testing."""
 
 import asyncio
+import sys
 import logging
 from typing import Dict, Optional
 from app.services.browser_service import BrowserService
+
+# Fix for Windows: Ensure event loop policy is set for Playwright
+# This needs to be set before any Playwright operations
+if sys.platform == 'win32':
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except RuntimeError:
+        # Policy already set, ignore
+        pass
 
 logger = logging.getLogger(__name__)
 

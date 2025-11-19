@@ -1,11 +1,20 @@
 """Browser automation service for interacting with chatbots."""
 
 import asyncio
+import sys
 import base64
 from typing import Optional, Dict, Tuple
 from playwright.async_api import async_playwright, Browser, Page, Playwright
 from bs4 import BeautifulSoup
 import logging
+
+# Fix for Windows: Ensure event loop policy is set for Playwright
+if sys.platform == 'win32':
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except RuntimeError:
+        # Policy already set, ignore
+        pass
 
 logger = logging.getLogger(__name__)
 
