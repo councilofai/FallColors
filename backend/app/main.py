@@ -1,5 +1,7 @@
 """Main FastAPI application for Chatbot Testbed Platform."""
 
+import sys
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -7,6 +9,11 @@ import logging
 from app.core.config import get_settings
 from app.core.database import init_db
 from app.api.routes import router
+
+# Fix for Windows: Set event loop policy to support subprocess creation
+# This is required for Playwright to work on Windows
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 # Configure logging
 logging.basicConfig(
