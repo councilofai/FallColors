@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
+import InteractiveMode from './InteractiveMode';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 const WS_BASE_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/api';
 
 function App() {
+  const [mode, setMode] = useState('interactive'); // 'interactive' or 'automated'
   const [testConfig, setTestConfig] = useState({
     url: '',
     topic: '',
@@ -239,15 +241,15 @@ function App() {
     }
   };
 
-  const deleteSession = async (sessionId) => {
+  const deleteSession = async (sessionIdToDelete) => {
     if (!window.confirm('Are you sure you want to delete this session?')) {
       return;
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/test/${sessionId}`);
+      await axios.delete(`${API_BASE_URL}/test/${sessionIdToDelete}`);
       fetchSessions();
-      if (sessionId === sessionId) {
+      if (sessionIdToDelete === sessionId) {
         setSessionId(null);
         setTestStatus('idle');
         setEvents([]);
@@ -265,8 +267,27 @@ function App() {
       <header className="header">
         <h1>🤖 Chatbot Safety Testbed Platform</h1>
         <p>Automated evaluation of chatbot safety and robustness</p>
+
+        {/* Mode Selector */}
+        <div className="mode-selector">
+          <button
+            className={`mode-btn ${mode === 'interactive' ? 'active' : ''}`}
+            onClick={() => setMode('interactive')}
+          >
+            Interactive Mode (Phase 1)
+          </button>
+          <button
+            className={`mode-btn ${mode === 'automated' ? 'active' : ''}`}
+            onClick={() => setMode('automated')}
+          >
+            Automated Testing
+          </button>
+        </div>
       </header>
 
+      {mode === 'interactive' ? (
+        <InteractiveMode />
+      ) : (
       <div className="container">
         {/* Left Panel - Configuration */}
         <div className="panel config-panel">
@@ -510,6 +531,7 @@ function App() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

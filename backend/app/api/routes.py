@@ -6,9 +6,11 @@ from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 import asyncio
 import logging
+import uuid
 
 from app.core.database import get_db, TestSession as DBTestSession
 from app.services.test_orchestrator import TestOrchestrator
+from app.services import interactive_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -322,3 +324,125 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "chatbot-testbed"}
+
+
+# ============================================================================
+# Interactive Session Endpoints (Phase 1)
+# ============================================================================
+
+class OpenBrowserRequest(BaseModel):
+    """Request model for opening an interactive browser session."""
+    url: str
+
+
+class InteractiveSessionResponse(BaseModel):
+    """Response model for interactive session."""
+    session_id: str
+    status: str
+    url: str
+    title: str
+    message: str
+
+
+@router.post("/interactive/open", response_model=InteractiveSessionResponse)
+async def open_interactive_browser(request: OpenBrowserRequest):
+    """
+    Open an interactive browser session for manual testing.
+
+    This endpoint opens a browser window that the user can see and interact with.
+    The browser stays open until explicitly closed.
+
+    Args:
+        request: Browser configuration with URL
+
+    Returns:
+        Interactive session information
+    """
+    # Generate unique session ID
+    session_id = str(uuid.uuid4())
+
+    # Create and start the interactive session
+    result = await interactive_session.create_interactive_session(
+        session_id=session_id,
+        url=request.url
+    )
+
+    if result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+
+    return InteractiveSessionResponse(
+        session_id=result["session_id"],
+        status=result["status"],
+        url=result["url"],
+        title=result["title"],
+        message=result["message"]
+    )
+
+
+@router.get("/interactive/{session_id}")
+async def get_interactive_session(session_id: str):
+    """
+    Get information about an active interactive session.
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Session information including screenshot
+    """
+    session_info = await interactive_session.get_session_info(session_id)
+
+    if not session_info:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return session_info
+
+
+@router.get("/interactive/{session_id}/screenshot")
+async def get_session_screenshot(session_id: str):
+    """
+    Get a screenshot from an active session.
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Base64 encoded screenshot
+    """
+    screenshot = await interactive_session.get_session_screenshot(session_id)
+
+    if screenshot is None:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {"screenshot": screenshot}
+
+
+@router.delete("/interactive/{session_id}")
+async def close_interactive_session(session_id: str):
+    """
+    Close an interactive browser session.
+
+    Args:
+        session_id: Session ID
+
+    Returns:
+        Status message
+    """
+    success = await interactive_session.close_session(session_id)
+
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {"status": "closed", "session_id": session_id}
+
+
+@router.get("/interactive")
+async def list_interactive_sessions():
+    """
+    List all active interactive sessions.
+
+    Returns:
+        List of active session IDs
+    """
+    sessions = await interactive_session.list_active_sessions()
+    return {"sessions": sessions, "count": len(sessions)}
