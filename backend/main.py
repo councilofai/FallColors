@@ -30,5 +30,6 @@ if __name__ == "__main__":
         host=settings.host,
         port=settings.port,
         reload=settings.debug,
-        log_level="info"
+        log_level="info",
+        loop="asyncio"  # Force asyncio event loop (critical for Windows)
     )
