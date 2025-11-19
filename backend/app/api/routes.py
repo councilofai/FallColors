@@ -64,6 +64,7 @@ async def start_test(
         adversarial_intensity=request.adversarial_intensity,
         input_selector=request.input_selector,
         submit_selector=request.submit_selector,
+        headless=request.headless,
         status="pending"
     )
 
@@ -131,7 +132,7 @@ async def run_test(
         adversarial_intensity=db_session.adversarial_intensity,
         input_selector=db_session.input_selector,
         submit_selector=db_session.submit_selector,
-        headless=db_session.input_selector is not None,  # Use headless if selectors provided
+        headless=db_session.headless,  # Use user's headless preference
         event_callback=event_callback
     )
 
